@@ -1,0 +1,423 @@
+<div
+  class="text-gray-300 leading-relaxed selection:bg-pink-400/20 font-sans antialiased overflow-hidden h-screen w-screen bg-black">
+
+  <div class="h-full flex flex-col relative z-10">
+    <!-- Top Bar -->
+    <header
+      class="fixed top-0 left-0 right-0 z-[10000] bg-black/80 backdrop-blur-md border-b border-pink-500/20 flex-shrink-0 h-10 md:h-12 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
+      <div class="w-full h-full px-4 flex items-center justify-between">
+        <!-- Active Window Title -->
+        <div class="font-mono text-xs md:text-sm text-pink-400/90 flex items-center gap-2">
+          <span class="text-purple-500">➜</span>
+          <span>{{ windows()[activeWindowId()]?.title ?? 'Desktop' }}</span>
+        </div>
+
+        <!-- Applets / Taskbar -->
+        <div
+          class="flex items-center space-x-1 bg-gray-900/50 p-1 rounded border border-gray-800 overflow-x-auto max-w-[70vw] md:max-w-none scrollbar-hide">
+          @for (id of ['about', 'projects', 'fetch', 'skills', 'contact', 'snake', 'htop', 'cmatrix']; track id) {
+          <button (click)="toggleWindow(id)"
+            class="group relative px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-mono rounded-sm transition-all duration-200 flex-shrink-0"
+            [class.text-pink-400]="windows()[id].isOpen" [class.bg-pink-500/10]="windows()[id].isOpen"
+            [class.text-gray-500]="!windows()[id].isOpen" [class.hover:text-gray-300]="!windows()[id].isOpen">
+            {{ id }}
+            @if(windows()[id].isOpen) {
+            <span
+              class="absolute -bottom-[6px] left-1/2 -translate-x-1/2 w-1 h-1 bg-pink-500 rounded-full shadow-[0_0_5px_#ec4899]"></span>
+            }
+          </button>
+          }
+          <div class="w-[1px] h-4 bg-gray-800 mx-2 flex-shrink-0"></div>
+          <button (click)="toggleLang()"
+            class="px-2 py-0.5 text-[10px] md:text-xs font-mono text-purple-400 hover:text-pink-400 transition-colors bg-purple-500/10 rounded border border-purple-500/20 hover:border-pink-500/30 flex-shrink-0">
+            {{ lang() === 'pt' ? '🇧🇷' : '🇺🇸' }}
+          </button>
+          <div class="w-[1px] h-4 bg-gray-800 mx-2 flex-shrink-0"></div>
+          <div class="font-mono text-xs text-purple-400/90 px-2 min-w-[50px] text-center flex-shrink-0">
+            {{ currentTime() }}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tiling Window Manager Workspace -->
+    <main class="relative flex-grow w-full h-full mt-10 md:mt-12 overflow-auto p-2">
+      @if (openWindows().length > 0) {
+      <div class="w-full min-h-full md:h-full grid gap-2"
+        [class]="openWindows().length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-' + gridCols()"
+        [style.grid-template-columns]="'repeat(' + gridCols() + ', 1fr)'"
+        [style.grid-template-rows]="'repeat(' + gridRows() + ', 1fr)'">
+        @for (window of openWindows(); track window.id; let idx = $index) {
+        <div class="min-h-0 min-w-0" [style.grid-column]="getGridColumn(idx)">
+          <ng-container [ngTemplateOutlet]="windowTile"
+            [ngTemplateOutletContext]="{ $implicit: window }"></ng-container>
+        </div>
+        }
+      </div>
+
+      <!-- Drag Ghost - Window Clone -->
+      @if (draggingWindowId()) {
+      <div
+        class="fixed pointer-events-none z-[9999] w-72 h-56 transform -translate-x-1/2 -translate-y-1/2 opacity-90 scale-95"
+        [style.left.px]="dragX()" [style.top.px]="dragY()">
+        <div
+          class="w-full h-full bg-[#0a0a10]/95 backdrop-blur-xl border-2 border-pink-500 rounded-lg shadow-[0_0_60px_rgba(236,72,153,0.5)] flex flex-col overflow-hidden">
+          <!-- Ghost Header -->
+          <div class="flex items-center justify-between px-3 h-8 bg-black/60 border-b border-pink-500/30">
+            <span class="font-mono text-xs text-pink-400 font-bold truncate">{{ windows()[draggingWindowId()!].title
+              }}</span>
+            <div class="flex items-center gap-1">
+              <span class="text-gray-600 text-xs">−</span>
+              <span class="text-gray-600 text-xs">□</span>
+              <span class="text-gray-600 text-xs">✕</span>
+            </div>
+          </div>
+          <!-- Ghost Content -->
+          <div class="flex-1 flex items-center justify-center bg-gradient-to-br from-pink-900/10 to-purple-900/10">
+            <div class="text-center animate-pulse">
+              <div class="text-3xl mb-2">🖱️</div>
+              <div class="text-gray-400 text-xs font-mono">Solte para trocar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+      } @else {
+      <div class="w-full h-full flex flex-col items-center justify-center pointer-events-none">
+        <h1
+          class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 opacity-20 filter blur-sm animate-pulse">
+          Solem et Lunam
+        </h1>
+        <p class="text-gray-600 font-mono text-sm mt-4 opacity-50">{{ t().readyText }}</p>
+      </div>
+      }
+    </main>
+  </div>
+</div>
+
+
+<!-- Reusable Window Tile Template -->
+<ng-template #windowTile let-window>
+  <div [id]="window.id"
+    class="window-tile relative w-full h-full bg-[#0a0a10]/90 backdrop-blur-xl border border-gray-800/80 rounded-lg shadow-2xl flex flex-col overflow-hidden"
+    [class.border-pink-500/50]="activeWindowId() === window.id"
+    [class.shadow-[0_0_30px_rgba(236,72,153,0.15)]]="activeWindowId() === window.id"
+    [class.z-20]="activeWindowId() === window.id" [class.z-10]="activeWindowId() !== window.id"
+    [class.opacity-50]="draggingWindowId() === window.id" [class.scale-[0.98]]="draggingWindowId() === window.id"
+    (mousedown)="focusWindow(window.id)">
+
+    <!-- Window Header -->
+    <div class="flex items-center px-3 h-9 bg-black/40 border-b border-white/5 select-none flex-shrink-0"
+      [class.bg-gradient-to-r]="activeWindowId() === window.id"
+      [class.from-pink-900/10]="activeWindowId() === window.id" [class.to-transparent]="activeWindowId() === window.id">
+
+      <div (mousedown)="onDragStart($event, window.id)" class="flex-1 flex items-center cursor-move h-full">
+        <span class="font-mono text-[10px] md:text-xs tracking-wide uppercase font-bold"
+          [class.text-pink-400]="activeWindowId() === window.id" [class.text-gray-600]="activeWindowId() !== window.id">
+          {{ window.title }}
+        </span>
+      </div>
+
+      <!-- Linux-style window controls -->
+      <div class="flex items-center gap-1">
+        <button
+          class="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-white hover:bg-gray-700/50 rounded transition-all">
+          <span class="text-lg leading-none mb-1">−</span>
+        </button>
+        <button
+          class="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-white hover:bg-gray-700/50 rounded transition-all">
+          <span class="text-xs">□</span>
+        </button>
+        <button (click)="closeWindow($event, window.id)"
+          class="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-white hover:bg-red-500/80 rounded transition-all">
+          <span class="text-sm">✕</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Internal Content -->
+    @switch (window.id) {
+    @case ('cmatrix') {
+    <div class="flex-grow bg-black relative">
+      <ng-container [ngTemplateOutlet]="cmatrixContent"></ng-container>
+    </div>
+    }
+    @case ('snake') {
+    <div class="flex-grow bg-gray-900 relative flex items-center justify-center p-4">
+      <ng-container [ngTemplateOutlet]="snakeContent"></ng-container>
+    </div>
+    }
+    @case ('htop') {
+    <div class="flex-grow bg-[#0d1117] relative font-mono text-xs overflow-hidden">
+      <ng-container [ngTemplateOutlet]="htopContent"></ng-container>
+    </div>
+    }
+    @default {
+    <div class="flex-grow overflow-y-auto overflow-x-hidden p-4 md:p-6 custom-scrollbar">
+      @switch (window.id) {
+      @case('fetch') { <ng-container [ngTemplateOutlet]="fetchContent"></ng-container> }
+      @case('projects') { <ng-container [ngTemplateOutlet]="projectsContent"></ng-container> }
+      @case('about') { <ng-container [ngTemplateOutlet]="aboutContent"></ng-container> }
+      @case('skills') { <ng-container [ngTemplateOutlet]="skillsContent"></ng-container> }
+      @case('contact') { <ng-container [ngTemplateOutlet]="contactContent"></ng-container> }
+      }
+    </div>
+    }
+    }
+
+    <!-- Drag Over Overlay -->
+    @if (dragOverWindowId() === window.id && draggingWindowId() !== window.id) {
+    <div
+      class="absolute inset-0 bg-pink-500/20 backdrop-blur-[1px] z-50 flex items-center justify-center border-2 border-pink-500 animate-pulse">
+      <span class="font-mono text-pink-300 font-bold text-xl bg-black/50 px-4 py-2 rounded">SWAP</span>
+    </div>
+    }
+  </div>
+</ng-template>
+
+<!-- CONTENT TEMPLATES -->
+
+<ng-template #fetchContent>
+  <div
+    class="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start h-full justify-center md:justify-start">
+    <div class="relative group">
+      <div
+        class="absolute -inset-1 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-60 transition duration-1000 group-hover:duration-200">
+      </div>
+      <div class="relative w-32 h-32 md:w-40 md:h-40 bg-black rounded-lg overflow-hidden border border-gray-800">
+        <img ngSrc="https://avatars.githubusercontent.com/u/109187405?v=4" width="160" height="160" alt="Avatar"
+          class="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500">
+      </div>
+    </div>
+
+    <div class="font-mono text-sm space-y-3 w-full max-w-md">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-100 flex items-center gap-2">
+          {{ developerName() }}
+          <span class="text-xs bg-pink-500/10 text-pink-400 border border-pink-500/20 px-1.5 py-0.5 rounded">v18</span>
+        </h2>
+        <p class="text-purple-400 text-xs mt-1">@system_admin</p>
+      </div>
+
+      <div class="h-[1px] w-full bg-gray-800 my-4"></div>
+
+      <div class="grid grid-cols-[80px_1fr] gap-y-2 text-xs md:text-sm">
+        <span class="text-pink-500 font-bold">OS</span> <span class="text-gray-400">Arch Linux x86_64</span>
+        <span class="text-pink-500 font-bold">Host</span> <span class="text-gray-400">portifolio</span>
+        <span class="text-pink-500 font-bold">Kernel</span> <span class="text-gray-400">Linux</span>
+        <span class="text-pink-500 font-bold">Uptime</span> <span class="text-gray-400">{{ currentTime() }}</span>
+        <span class="text-pink-500 font-bold">Shell</span> <span class="text-gray-400">zsh 5.9</span>
+        <span class="text-pink-500 font-bold">Theme</span> <span class="text-gray-400">Cyberpunk_Pink</span>
+        <span class="text-pink-500 font-bold">Font</span> <span class="text-gray-400">JetBrains Mono</span>
+      </div>
+
+      <div class="flex gap-2 mt-4 pt-2">
+        <div class="w-3 h-3 bg-black"></div>
+        <div class="w-3 h-3 bg-red-500"></div>
+        <div class="w-3 h-3 bg-green-500"></div>
+        <div class="w-3 h-3 bg-yellow-500"></div>
+        <div class="w-3 h-3 bg-blue-500"></div>
+        <div class="w-3 h-3 bg-purple-500"></div>
+        <div class="w-3 h-3 bg-cyan-500"></div>
+        <div class="w-3 h-3 bg-gray-300"></div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #aboutContent>
+  <div class="prose prose-invert prose-sm md:prose-base max-w-none font-sans text-gray-300">
+    <p class="leading-7">
+      {{ t().aboutIntro }}
+      <span class="text-gray-100 bg-gray-800 px-1 rounded">{{ t().performance }}</span> e
+      <span class="text-gray-100 bg-gray-800 px-1 rounded">{{ t().distributed }}</span>.
+    </p>
+    <blockquote class="border-l-4 border-pink-500 pl-4 italic text-gray-500 my-6">
+      {{ t().aboutQuote }}
+    </blockquote>
+    <p>
+      {{ t().aboutText }}
+    </p>
+  </div>
+</ng-template>
+
+<ng-template #skillsContent>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+    @for (skill of skills; track skill.name) {
+    <div
+      class="flex flex-col items-center justify-center gap-2 bg-gray-900/50 hover:bg-gray-800 text-gray-400 hover:text-pink-400 py-4 px-3 rounded-md border border-gray-800 hover:border-pink-500/30 transition-all duration-300 group cursor-default">
+      <img [src]="skill.icon" [alt]="skill.name"
+        class="w-10 h-10 group-hover:scale-110 transition-transform duration-300">
+      <span class="text-xs font-mono font-bold">{{ skill.name }}</span>
+    </div>
+    }
+  </div>
+</ng-template>
+
+<ng-template #projectsContent>
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    @for (project of projects; track project.title) {
+    <a [href]="project.url" target="_blank" rel="noopener noreferrer"
+      class="group relative bg-gray-900/40 border border-gray-800 rounded-lg p-5 flex flex-col hover:border-pink-500/50 hover:bg-gray-900/80 transition-all duration-300 overflow-hidden cursor-pointer">
+      <div class="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5 text-gray-500 group-hover:text-pink-400" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+        </svg>
+      </div>
+
+      <div class="mb-3">
+        <h4 class="text-lg font-bold text-gray-100 group-hover:text-pink-400 transition-colors">{{ project.title }}</h4>
+        <span class="text-[10px] uppercase tracking-wider text-gray-500">{{ lang() === 'pt' ? project.type.pt :
+          project.type.en }}</span>
+      </div>
+
+      <p class="text-gray-400 text-sm leading-relaxed mb-4 flex-grow">{{ lang() === 'pt' ? project.descPt :
+        project.descEn }}</p>
+
+      <div class="flex flex-wrap gap-2 mt-auto">
+        @for (tech of project.tech; track tech) {
+        <span
+          class="text-[10px] font-mono text-pink-300/80 bg-pink-900/10 border border-pink-500/10 px-2 py-1 rounded">{{
+          tech }}</span>
+        }
+      </div>
+    </a>
+    }
+  </div>
+</ng-template>
+
+<ng-template #contactContent>
+  <div class="flex flex-col items-center justify-center h-full text-center space-y-8">
+    <div class="relative">
+      <div class="absolute -inset-4 bg-pink-500/20 rounded-full blur-xl animate-pulse"></div>
+      <div
+        class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center relative z-10 border border-gray-700">
+        <svg class="w-8 h-8 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+          </path>
+        </svg>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold text-white mb-2">{{ t().contactTitle }}</h3>
+      <p class="text-gray-400 max-w-sm mx-auto text-sm">
+        {{ t().contactText }}
+      </p>
+    </div>
+
+    <a href="mailto:{{email()}}"
+      class="relative inline-flex items-center justify-center px-8 py-3 overflow-hidden font-mono font-medium tracking-tighter text-white bg-gray-800 rounded-lg group">
+      <span
+        class="absolute w-0 h-0 transition-all duration-500 ease-out bg-pink-600 rounded-full group-hover:w-56 group-hover:h-56"></span>
+      <span
+        class="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-gray-700"></span>
+      <span class="relative">{{email()}}</span>
+    </a>
+
+    <div class="flex gap-4">
+      @for (social of socials; track social.name) {
+      <a [href]="social.url" [title]="social.name"
+        class="p-2 text-gray-500 hover:text-pink-400 transition-colors border border-transparent hover:border-gray-800 rounded-md">
+        <span [innerHTML]="getSafeIcon(social.icon)"></span>
+      </a>
+      }
+    </div>
+  </div>
+</ng-template>
+
+
+<ng-template #cmatrixContent>
+  <canvas #cmatrixCanvas class="w-full h-full block"></canvas>
+</ng-template>
+
+<ng-template #snakeContent>
+  <div class="flex flex-col items-center justify-center h-full gap-4 p-4">
+    <div class="relative bg-black border-2 border-gray-800 p-1 shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+      <div class="grid grid-cols-[repeat(20,15px)] grid-rows-[repeat(20,15px)] gap-[1px] bg-gray-900">
+        @for (cell of [].constructor(400); track $index) {
+        @let x = $index % 20;
+        @let y = Math.floor($index / 20);
+
+        <div class="w-full h-full" [class.bg-green-500]="isSnakeHead(x, y)" [class.bg-green-700]="isSnakeBody(x, y)"
+          [class.bg-red-500]="isFood(x, y)"
+          [class.bg-gray-800]="!isFood(x, y) && !isSnakeHead(x, y) && !isSnakeBody(x, y)">
+        </div>
+        }
+      </div>
+
+      <!-- Scanline overlay -->
+      <div
+        class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none z-10">
+      </div>
+    </div>
+
+    <div class="flex gap-4 items-center">
+      <button (click)="isSnakePlaying() ? stopSnake() : startSnake()"
+        class="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-xs font-mono text-white rounded border border-pink-400 transition-colors">
+        {{ isSnakePlaying() ? 'PAUSE' : 'START GAME' }}
+      </button>
+      <div class="text-xs font-mono text-gray-500">Use Arrow Keys</div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #htopContent>
+  <div class="w-full h-full p-3 overflow-auto text-[11px] leading-relaxed">
+    <!-- CPU Bars -->
+    <div class="mb-3">
+      @for (cpu of cpuValues(); track $index; let i = $index) {
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-cyan-400 w-4">{{ i + 1 }}</span>
+        <div class="flex-1 h-2 bg-gray-800 rounded overflow-hidden">
+          <div class="h-full transition-all duration-300" [class.bg-green-500]="cpu < 50"
+            [class.bg-yellow-500]="cpu >= 50 && cpu < 80" [class.bg-red-500]="cpu >= 80" [style.width.%]="cpu"></div>
+        </div>
+        <span class="text-white w-12 text-right" [class.text-red-400]="cpu >= 80"
+          [class.text-yellow-400]="cpu >= 50 && cpu < 80">{{ cpu }}.{{ Math.floor(Math.random() * 10) }}%</span>
+      </div>
+      }
+    </div>
+
+    <!-- Memory -->
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-green-400">Mem</span>
+      <div class="flex-1 h-2 bg-gray-800 rounded overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-green-600 via-blue-500 to-yellow-500 transition-all duration-300"
+          [style.width.%]="memoryValue()"></div>
+      </div>
+      <span class="text-white text-[10px]">{{ (memoryValue() * 0.16).toFixed(1) }}G/16G</span>
+    </div>
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-green-400">Swp</span>
+      <div class="flex-1 h-2 bg-gray-800 rounded overflow-hidden">
+        <div class="h-full bg-yellow-600 transition-all duration-300" [style.width.%]="8 + Math.random() * 5"></div>
+      </div>
+      <span class="text-white text-[10px]">0.8G/8.0G</span>
+    </div>
+
+    <!-- Process List -->
+    <div class="border-t border-gray-700 pt-2">
+      <div class="flex text-gray-500 mb-1 border-b border-gray-800 pb-1">
+        <span class="w-12">PID</span>
+        <span class="flex-1">COMMAND</span>
+        <span class="w-10">CPU%</span>
+        <span class="w-16 text-right">ACTION</span>
+      </div>
+      @for (win of openWindows(); track win.id; let i = $index) {
+      <div class="flex items-center text-green-400 hover:bg-gray-800/50 py-0.5 group">
+        <span class="w-12 text-cyan-400">{{ 1000 + i * 111 }}</span>
+        <span class="flex-1 text-white truncate">{{ win.title }}</span>
+        <span class="w-10" [class.text-red-400]="cpuValues()[i % 4] > 70">{{ cpuValues()[i % 4] }}.{{ i }}</span>
+        <button (click)="closeWindow($event, win.id)"
+          class="w-16 text-right text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">
+          KILL
+        </button>
+      </div>
+      }
+    </div>
+  </div>
+</ng-template>

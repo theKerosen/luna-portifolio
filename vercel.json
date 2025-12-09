@@ -1,0 +1,6 @@
+{
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "framework": "angular",
+    "installCommand": "npm install --legacy-peer-deps"
+}
