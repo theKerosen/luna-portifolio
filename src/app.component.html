@@ -429,7 +429,7 @@
 </ng-template>
 
 <ng-template #steamContent>
-  <div class="w-full h-full p-4 overflow-auto text-xs">
+  <div class="w-full h-full p-3 overflow-auto text-xs">
     @if (steamLoading() && !steamData()) {
     <div class="flex items-center justify-center h-full">
       <div class="text-pink-400 animate-pulse">Conectando ao AstraNet...</div>
@@ -441,37 +441,82 @@
     </div>
     } @else if (steamData()) {
     <div class="space-y-3">
+
       <!-- Header -->
-      <div class="flex items-center gap-3 border-b border-gray-800 pb-3">
+      <div class="flex items-center gap-3 pb-2 border-b border-gray-800">
         <img
           src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/8dbc71957312bbd3baea65848b545be9eae2a355.jpg"
-          alt="CS2" class="w-10 h-10 rounded">
+          alt="CS2" class="w-9 h-9 rounded">
         <div class="flex-1">
           <div class="text-sm font-bold text-white">{{ steamData().app_name }}</div>
-          <div class="text-[10px] text-gray-500">Build: {{ steamData().change_number }}</div>
+          <div class="text-[9px] text-gray-500">Build {{ steamData().change_number }}</div>
         </div>
         <div class="text-right">
-          <div class="text-green-400 font-bold">{{ (steamData().player_count || 0).toLocaleString() }}</div>
-          <div class="text-[10px] text-gray-500">online</div>
+          <div class="text-green-400 font-bold text-sm">{{ (steamData().player_count || 0).toLocaleString() }}</div>
+          <div class="text-[9px] text-gray-500">online</div>
         </div>
       </div>
 
+      <!-- Server Status -->
+      @if (serverStatus()) {
+      <div class="grid grid-cols-3 gap-2 text-[10px]">
+        <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
+          <div class="text-gray-500 mb-1">Steam</div>
+          <div class="flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().steam === 'online'"
+              [class.bg-yellow-500]="serverStatus().steam === 'checking'"
+              [class.bg-gray-500]="serverStatus().steam === 'unknown'"></span>
+            <span [class.text-green-400]="serverStatus().steam === 'online'"
+              [class.text-gray-400]="serverStatus().steam !== 'online'">
+              {{ serverStatus().steam === 'online' ? 'Online' : 'N/A' }}
+            </span>
+          </div>
+        </div>
+        <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
+          <div class="text-gray-500 mb-1">CS2</div>
+          <div class="flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().cs2 === 'online'"
+              [class.bg-yellow-500]="serverStatus().cs2 === 'checking'"
+              [class.bg-gray-500]="serverStatus().cs2 === 'unknown'"></span>
+            <span [class.text-green-400]="serverStatus().cs2 === 'online'"
+              [class.text-gray-400]="serverStatus().cs2 !== 'online'">
+              {{ serverStatus().cs2 === 'online' ? 'Online' : 'N/A' }}
+            </span>
+          </div>
+        </div>
+        <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
+          <div class="text-gray-500 mb-1">MM</div>
+          <div class="flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().matchmaking === 'normal'"
+              [class.bg-yellow-500]="serverStatus().matchmaking === 'low'"
+              [class.bg-gray-500]="serverStatus().matchmaking === 'unknown'"></span>
+            <span [class.text-green-400]="serverStatus().matchmaking === 'normal'"
+              [class.text-yellow-400]="serverStatus().matchmaking === 'low'"
+              [class.text-gray-400]="serverStatus().matchmaking === 'unknown'">
+              {{ serverStatus().matchmaking === 'normal' ? 'Normal' : serverStatus().matchmaking === 'low' ? 'Baixo' :
+              'N/A' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      }
+
       <!-- Last Update Analysis -->
       @if (steamData().has_update && steamData().last_update) {
-      <div class="bg-gradient-to-r from-pink-900/30 to-purple-900/30 p-3 rounded border border-pink-500/40">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-pink-400 font-bold text-sm">🎯 Análise do Update</span>
-          <span class="text-[10px] px-2 py-0.5 rounded bg-pink-500/20 text-pink-300">{{ steamData().last_update.type
+      <div class="bg-gradient-to-r from-pink-900/30 to-purple-900/30 p-2.5 rounded border border-pink-500/40">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-pink-400 font-bold text-[11px]">Análise do Update</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300">{{ steamData().last_update.type
             }}</span>
         </div>
 
         @if (steamData().last_update.type_reason) {
-        <div class="text-gray-300 text-[11px] mb-2 italic">
-          "{{ steamData().last_update.type_reason }}"
+        <div class="text-gray-300 text-[10px] mb-2 italic border-l-2 border-pink-500/50 pl-2">
+          {{ steamData().last_update.type_reason }}
         </div>
         }
 
-        <div class="grid grid-cols-3 gap-2 text-[10px]">
+        <div class="grid grid-cols-3 gap-2 text-[9px]">
           <div class="text-center">
             <div class="text-cyan-400 font-bold">{{ steamData().last_update.depots_changed }}</div>
             <div class="text-gray-500">Depots</div>
@@ -487,20 +532,24 @@
         </div>
       </div>
       } @else {
-      <div class="text-gray-500 text-center py-2 text-[11px]">Aguardando detecção de update...</div>
+      <div class="text-gray-500 text-center py-2 text-[10px] bg-gray-900/30 rounded">
+        Aguardando detecção de update...
+      </div>
       }
 
       <!-- News Section -->
       @if (steamNews().length > 0) {
-      <div class="border-t border-gray-800 pt-3">
-        <div class="text-gray-400 font-bold mb-2 text-[11px]">📰 Últimas Notícias</div>
-        <div class="space-y-2">
+      <div class="pt-2">
+        <div class="text-gray-400 font-bold mb-2 text-[10px]">Últimas Notícias</div>
+        <div class="space-y-1.5">
           @for (news of steamNews().slice(0, 3); track news.title) {
           <a [href]="news.url" target="_blank"
             class="block p-2 bg-gray-900/50 rounded border border-gray-800 hover:border-pink-500/30 transition-colors">
-            <div class="text-white text-[11px] font-medium line-clamp-1">{{ news.title }}</div>
-            <div class="text-gray-500 text-[10px] mt-1 line-clamp-2">{{ news.contents }}</div>
-            <div class="text-gray-600 text-[9px] mt-1">{{ news.feed }}</div>
+            <div class="flex justify-between items-start gap-2">
+              <div class="text-white text-[10px] font-medium line-clamp-1 flex-1">{{ news.title }}</div>
+              <div class="text-gray-600 text-[8px] whitespace-nowrap">{{ formatDate(news.date) }}</div>
+            </div>
+            <div class="text-gray-500 text-[9px] mt-1 line-clamp-1">{{ cleanNewsContent(news.contents) }}</div>
           </a>
           }
         </div>
@@ -508,8 +557,10 @@
       }
 
       <!-- Footer -->
-      <div class="text-[9px] text-gray-600 text-center pt-2 border-t border-gray-800">
-        <span class="text-pink-400">AstraNet</span> • Monitorando 24/7
+      <div class="text-[8px] text-gray-600 text-center pt-2 border-t border-gray-800 flex justify-between items-center">
+        <span>Uptime: {{ formatUptime(steamData().uptime_seconds) }}</span>
+        <span class="text-pink-400">AstraNet</span>
+        <span>{{ steamData().status }}</span>
       </div>
     </div>
     }

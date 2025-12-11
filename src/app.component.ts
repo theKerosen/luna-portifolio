@@ -175,6 +175,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   steamNews = signal<any[]>([]);
   steamLoading = signal(false);
   steamError = signal<string | null>(null);
+  serverStatus = signal<any>(null);
 
   private htopInterval?: any;
 
@@ -223,9 +224,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.steamLoading.set(true);
       this.steamError.set(null);
 
-      const [statusRes, newsRes] = await Promise.all([
+      const [statusRes, newsRes, serversRes] = await Promise.all([
         fetch('https://api.ladyluh.dev/steam/status'),
-        fetch('https://api.ladyluh.dev/steam/news')
+        fetch('https://api.ladyluh.dev/steam/news'),
+        fetch('https://api.ladyluh.dev/steam/servers')
       ]);
 
       if (!statusRes.ok) throw new Error('API offline');
@@ -237,11 +239,60 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         const newsData = await newsRes.json();
         this.steamNews.set(newsData.news || []);
       }
+
+      if (serversRes.ok) {
+        const serversData = await serversRes.json();
+        this.serverStatus.set(serversData);
+      } else {
+        this.serverStatus.set({
+          steam: statusData.player_count > 0 ? 'online' : 'unknown',
+          cs2: statusData.player_count > 0 ? 'online' : 'unknown',
+          matchmaking: statusData.player_count > 100000 ? 'normal' : 'low'
+        });
+      }
     } catch (err: any) {
       this.steamError.set(err.message || 'Falha ao conectar');
+      this.serverStatus.set({ steam: 'unknown', cs2: 'unknown', matchmaking: 'unknown' });
     } finally {
       this.steamLoading.set(false);
     }
+  }
+
+  formatDate(timestamp: number): string {
+    if (!timestamp) return '';
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return 'Agora';
+    if (diffHours < 24) return `${diffHours}h atrás`;
+    if (diffDays < 7) return `${diffDays}d atrás`;
+    return date.toLocaleDateString('pt-BR');
+  }
+
+  formatUptime(seconds: number): string {
+    if (!seconds) return '0m';
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return `${days}d ${hours % 24}h`;
+    }
+    return `${hours}h ${mins}m`;
+  }
+
+  cleanNewsContent(content: string): string {
+    if (!content) return '';
+    return content
+      .replace(/https?:\/\/[^\s<]+/g, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\[img\][^\[]+\[\/img\]/gi, '')
+      .replace(/\{STEAM_[^}]+\}/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 150);
   }
 
   ngAfterViewInit(): void { this.initWebGL(); }
