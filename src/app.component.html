@@ -15,7 +15,8 @@
         <!-- Applets / Taskbar -->
         <div
           class="flex items-center space-x-1 bg-gray-900/50 p-1 rounded border border-gray-800 overflow-x-auto max-w-[70vw] md:max-w-none scrollbar-hide">
-          @for (id of ['about', 'projects', 'fetch', 'skills', 'contact', 'snake', 'htop', 'cmatrix']; track id) {
+          @for (id of ['about', 'projects', 'fetch', 'skills', 'contact', 'snake', 'htop', 'cmatrix', 'steam']; track
+          id) {
           <button (click)="toggleWindow(id)"
             class="group relative px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-mono rounded-sm transition-all duration-200 flex-shrink-0"
             [class.text-pink-400]="windows()[id].isOpen" [class.bg-pink-500/10]="windows()[id].isOpen"
@@ -150,6 +151,11 @@
     @case ('htop') {
     <div class="flex-grow bg-[#0d1117] relative font-mono text-xs overflow-hidden">
       <ng-container [ngTemplateOutlet]="htopContent"></ng-container>
+    </div>
+    }
+    @case ('steam') {
+    <div class="flex-grow bg-[#0d1117] relative font-mono text-xs overflow-hidden">
+      <ng-container [ngTemplateOutlet]="steamContent"></ng-container>
     </div>
     }
     @default {
@@ -419,5 +425,76 @@
       </div>
       }
     </div>
+  </div>
+</ng-template>
+
+<ng-template #steamContent>
+  <div class="w-full h-full p-4 overflow-auto text-xs">
+    @if (steamLoading() && !steamData()) {
+    <div class="flex items-center justify-center h-full">
+      <div class="text-pink-400 animate-pulse">Conectando ao AstraNet...</div>
+    </div>
+    } @else if (steamError()) {
+    <div class="flex flex-col items-center justify-center h-full gap-2">
+      <div class="text-red-400">Erro: {{ steamError() }}</div>
+      <button (click)="fetchSteamData()" class="text-pink-400 hover:text-pink-300 underline">Tentar novamente</button>
+    </div>
+    } @else if (steamData()) {
+    <div class="space-y-4">
+      <div class="flex items-center gap-3 border-b border-gray-800 pb-3">
+        <img
+          src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/8dbc71957312bbd3baea65848b545be9eae2a355.jpg"
+          alt="CS2" class="w-12 h-12 rounded">
+        <div>
+          <div class="text-lg font-bold text-white">{{ steamData().app_name }}</div>
+          <div class="text-gray-500">App ID: {{ steamData().app_id }}</div>
+        </div>
+        <div class="ml-auto text-right">
+          <div class="text-green-400 text-lg font-bold">{{ (steamData().player_count || 0).toLocaleString() }}</div>
+          <div class="text-gray-500">jogadores online</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-gray-900/50 p-3 rounded border border-gray-800">
+          <div class="text-gray-500 mb-1">Change Number</div>
+          <div class="text-pink-400 font-mono text-sm">{{ steamData().change_number || 'N/A' }}</div>
+        </div>
+        <div class="bg-gray-900/50 p-3 rounded border border-gray-800">
+          <div class="text-gray-500 mb-1">Status</div>
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            <span class="text-green-400">{{ steamData().status }}</span>
+          </div>
+        </div>
+      </div>
+
+      @if (steamData().has_update && steamData().last_update) {
+      <div class="bg-gradient-to-r from-pink-900/20 to-purple-900/20 p-4 rounded border border-pink-500/30">
+        <div class="text-pink-400 font-bold mb-2">Último Update Detectado</div>
+        <div class="grid grid-cols-2 gap-2 text-[11px]">
+          <div><span class="text-gray-500">Tipo:</span> <span class="text-white">{{ steamData().last_update.type
+              }}</span></div>
+          <div><span class="text-gray-500">Depots:</span> <span class="text-cyan-400">{{
+              steamData().last_update.depots_changed }}</span></div>
+          <div><span class="text-gray-500">Protobufs:</span> <span class="text-purple-400">{{
+              steamData().last_update.new_protobufs }}</span></div>
+          <div><span class="text-gray-500">Strings:</span> <span class="text-yellow-400">{{
+              steamData().last_update.new_strings }}</span></div>
+        </div>
+        @if (steamData().last_update.type_reason) {
+        <div class="mt-2 text-gray-400 text-[10px]">{{ steamData().last_update.type_reason }}</div>
+        }
+      </div>
+      } @else {
+      <div class="text-gray-500 text-center py-4">Aguardando próximo update do CS2...</div>
+      }
+
+      <div class="text-[10px] text-gray-600 text-center pt-2 border-t border-gray-800">
+        Powered by <span class="text-pink-400">AstraNet</span> • Uptime: {{ Math.floor(steamData().uptime_seconds /
+        3600) }}h {{ Math.floor((steamData().uptime_seconds % 3600) / 60) }}m
+      </div>
+    </div>
+    }
   </div>
 </ng-template>

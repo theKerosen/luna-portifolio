@@ -99,6 +99,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     'snake': { id: 'snake', title: './snake_game', isOpen: false, order: 5, x: 200, y: 100, w: 400, h: 480, zIndex: 6 },
     'htop': { id: 'htop', title: 'htop', isOpen: false, order: 6, x: 650, y: 150, w: 350, h: 350, zIndex: 7 },
     'cmatrix': { id: 'cmatrix', title: 'cmatrix', isOpen: false, order: 7, x: 400, y: 250, w: 450, h: 350, zIndex: 8 },
+    'steam': { id: 'steam', title: 'astranet --cs2', isOpen: false, order: 8, x: 300, y: 150, w: 480, h: 400, zIndex: 9 },
   });
   activeWindowId = signal<string | null>('about');
   maxZIndex = signal(10);
@@ -170,6 +171,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   cpuValues = signal([67, 45, 23, 89]);
   memoryValue = signal(72);
 
+  steamData = signal<any>(null);
+  steamLoading = signal(false);
+  steamError = signal<string | null>(null);
+
   private htopInterval?: any;
 
   updateHtopValues() {
@@ -208,6 +213,23 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updateTime();
     this.intervalId = setInterval(() => this.updateTime(), 1000);
     this.htopInterval = setInterval(() => this.updateHtopValues(), 800);
+    this.fetchSteamData();
+    setInterval(() => this.fetchSteamData(), 30000);
+  }
+
+  async fetchSteamData(): Promise<void> {
+    try {
+      this.steamLoading.set(true);
+      this.steamError.set(null);
+      const res = await fetch('https://api.ladyluh.dev/steam/status');
+      if (!res.ok) throw new Error('API offline');
+      const data = await res.json();
+      this.steamData.set(data);
+    } catch (err: any) {
+      this.steamError.set(err.message || 'Falha ao conectar');
+    } finally {
+      this.steamLoading.set(false);
+    }
   }
 
   ngAfterViewInit(): void { this.initWebGL(); }
