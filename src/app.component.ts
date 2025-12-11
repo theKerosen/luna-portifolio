@@ -172,6 +172,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   memoryValue = signal(72);
 
   steamData = signal<any>(null);
+  steamNews = signal<any[]>([]);
   steamLoading = signal(false);
   steamError = signal<string | null>(null);
 
@@ -221,10 +222,21 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       this.steamLoading.set(true);
       this.steamError.set(null);
-      const res = await fetch('https://api.ladyluh.dev/steam/status');
-      if (!res.ok) throw new Error('API offline');
-      const data = await res.json();
-      this.steamData.set(data);
+
+      const [statusRes, newsRes] = await Promise.all([
+        fetch('https://api.ladyluh.dev/steam/status'),
+        fetch('https://api.ladyluh.dev/steam/news')
+      ]);
+
+      if (!statusRes.ok) throw new Error('API offline');
+
+      const statusData = await statusRes.json();
+      this.steamData.set(statusData);
+
+      if (newsRes.ok) {
+        const newsData = await newsRes.json();
+        this.steamNews.set(newsData.news || []);
+      }
     } catch (err: any) {
       this.steamError.set(err.message || 'Falha ao conectar');
     } finally {

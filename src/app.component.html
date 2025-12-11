@@ -440,59 +440,76 @@
       <button (click)="fetchSteamData()" class="text-pink-400 hover:text-pink-300 underline">Tentar novamente</button>
     </div>
     } @else if (steamData()) {
-    <div class="space-y-4">
+    <div class="space-y-3">
+      <!-- Header -->
       <div class="flex items-center gap-3 border-b border-gray-800 pb-3">
         <img
           src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/8dbc71957312bbd3baea65848b545be9eae2a355.jpg"
-          alt="CS2" class="w-12 h-12 rounded">
-        <div>
-          <div class="text-lg font-bold text-white">{{ steamData().app_name }}</div>
-          <div class="text-gray-500">App ID: {{ steamData().app_id }}</div>
+          alt="CS2" class="w-10 h-10 rounded">
+        <div class="flex-1">
+          <div class="text-sm font-bold text-white">{{ steamData().app_name }}</div>
+          <div class="text-[10px] text-gray-500">Build: {{ steamData().change_number }}</div>
         </div>
-        <div class="ml-auto text-right">
-          <div class="text-green-400 text-lg font-bold">{{ (steamData().player_count || 0).toLocaleString() }}</div>
-          <div class="text-gray-500">jogadores online</div>
+        <div class="text-right">
+          <div class="text-green-400 font-bold">{{ (steamData().player_count || 0).toLocaleString() }}</div>
+          <div class="text-[10px] text-gray-500">online</div>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div class="bg-gray-900/50 p-3 rounded border border-gray-800">
-          <div class="text-gray-500 mb-1">Change Number</div>
-          <div class="text-pink-400 font-mono text-sm">{{ steamData().change_number || 'N/A' }}</div>
+      <!-- Last Update Analysis -->
+      @if (steamData().has_update && steamData().last_update) {
+      <div class="bg-gradient-to-r from-pink-900/30 to-purple-900/30 p-3 rounded border border-pink-500/40">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-pink-400 font-bold text-sm">🎯 Análise do Update</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-pink-500/20 text-pink-300">{{ steamData().last_update.type
+            }}</span>
         </div>
-        <div class="bg-gray-900/50 p-3 rounded border border-gray-800">
-          <div class="text-gray-500 mb-1">Status</div>
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span class="text-green-400">{{ steamData().status }}</span>
+
+        @if (steamData().last_update.type_reason) {
+        <div class="text-gray-300 text-[11px] mb-2 italic">
+          "{{ steamData().last_update.type_reason }}"
+        </div>
+        }
+
+        <div class="grid grid-cols-3 gap-2 text-[10px]">
+          <div class="text-center">
+            <div class="text-cyan-400 font-bold">{{ steamData().last_update.depots_changed }}</div>
+            <div class="text-gray-500">Depots</div>
+          </div>
+          <div class="text-center">
+            <div class="text-purple-400 font-bold">{{ steamData().last_update.new_protobufs }}</div>
+            <div class="text-gray-500">Protobufs</div>
+          </div>
+          <div class="text-center">
+            <div class="text-yellow-400 font-bold">{{ steamData().last_update.new_strings }}</div>
+            <div class="text-gray-500">Strings</div>
           </div>
         </div>
       </div>
-
-      @if (steamData().has_update && steamData().last_update) {
-      <div class="bg-gradient-to-r from-pink-900/20 to-purple-900/20 p-4 rounded border border-pink-500/30">
-        <div class="text-pink-400 font-bold mb-2">Último Update Detectado</div>
-        <div class="grid grid-cols-2 gap-2 text-[11px]">
-          <div><span class="text-gray-500">Tipo:</span> <span class="text-white">{{ steamData().last_update.type
-              }}</span></div>
-          <div><span class="text-gray-500">Depots:</span> <span class="text-cyan-400">{{
-              steamData().last_update.depots_changed }}</span></div>
-          <div><span class="text-gray-500">Protobufs:</span> <span class="text-purple-400">{{
-              steamData().last_update.new_protobufs }}</span></div>
-          <div><span class="text-gray-500">Strings:</span> <span class="text-yellow-400">{{
-              steamData().last_update.new_strings }}</span></div>
-        </div>
-        @if (steamData().last_update.type_reason) {
-        <div class="mt-2 text-gray-400 text-[10px]">{{ steamData().last_update.type_reason }}</div>
-        }
-      </div>
       } @else {
-      <div class="text-gray-500 text-center py-4">Aguardando próximo update do CS2...</div>
+      <div class="text-gray-500 text-center py-2 text-[11px]">Aguardando detecção de update...</div>
       }
 
-      <div class="text-[10px] text-gray-600 text-center pt-2 border-t border-gray-800">
-        Powered by <span class="text-pink-400">AstraNet</span> • Uptime: {{ Math.floor(steamData().uptime_seconds /
-        3600) }}h {{ Math.floor((steamData().uptime_seconds % 3600) / 60) }}m
+      <!-- News Section -->
+      @if (steamNews().length > 0) {
+      <div class="border-t border-gray-800 pt-3">
+        <div class="text-gray-400 font-bold mb-2 text-[11px]">📰 Últimas Notícias</div>
+        <div class="space-y-2">
+          @for (news of steamNews().slice(0, 3); track news.title) {
+          <a [href]="news.url" target="_blank"
+            class="block p-2 bg-gray-900/50 rounded border border-gray-800 hover:border-pink-500/30 transition-colors">
+            <div class="text-white text-[11px] font-medium line-clamp-1">{{ news.title }}</div>
+            <div class="text-gray-500 text-[10px] mt-1 line-clamp-2">{{ news.contents }}</div>
+            <div class="text-gray-600 text-[9px] mt-1">{{ news.feed }}</div>
+          </a>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Footer -->
+      <div class="text-[9px] text-gray-600 text-center pt-2 border-t border-gray-800">
+        <span class="text-pink-400">AstraNet</span> • Monitorando 24/7
       </div>
     </div>
     }
