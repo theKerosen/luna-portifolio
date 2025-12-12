@@ -99,9 +99,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     'snake': { id: 'snake', title: './snake_game', isOpen: false, order: 5, x: 200, y: 100, w: 400, h: 480, zIndex: 6 },
     'htop': { id: 'htop', title: 'htop', isOpen: false, order: 6, x: 650, y: 150, w: 350, h: 350, zIndex: 7 },
     'cmatrix': { id: 'cmatrix', title: 'cmatrix', isOpen: false, order: 7, x: 400, y: 250, w: 450, h: 350, zIndex: 8 },
-    'steam': { id: 'steam', title: 'astranet --cs2', isOpen: false, order: 8, x: 300, y: 150, w: 480, h: 400, zIndex: 9 },
+    'steam': { id: 'steam', title: 'astranet --cs2', isOpen: true, order: 8, x: 300, y: 150, w: 480, h: 400, zIndex: 9 },
   });
-  activeWindowId = signal<string | null>('about');
+  activeWindowId = signal<string | null>('steam');
   maxZIndex = signal(10);
 
   gap = signal(8);
