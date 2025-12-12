@@ -506,8 +506,14 @@
       <div class="bg-gradient-to-r from-pink-900/30 to-purple-900/30 p-2.5 rounded border border-pink-500/40">
         <div class="flex items-center justify-between mb-2">
           <span class="text-pink-400 font-bold text-[11px]">Análise do Update</span>
-          <span class="text-[9px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300">{{ steamData().last_update.type
-            }}</span>
+          <div class="flex items-center gap-2">
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300">{{ steamData().last_update.type
+              }}</span>
+            <button (click)="toggleDiffDetails()"
+              class="text-[8px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 hover:text-pink-400 hover:bg-gray-700 transition-colors">
+              {{ showDiffDetails() ? 'Ocultar' : 'Ver Detalhes' }}
+            </button>
+          </div>
         </div>
 
         @if (steamData().last_update.type_reason) {
@@ -530,6 +536,82 @@
             <div class="text-gray-500">Strings</div>
           </div>
         </div>
+
+        <!-- Diff Details Panel -->
+        @if (showDiffDetails()) {
+        <div class="mt-3 pt-3 border-t border-pink-500/20 space-y-2">
+          @if (diffDetailsLoading()) {
+          <div class="text-center text-gray-400 text-[10px] py-2">Carregando detalhes...</div>
+          } @else if (diffDetails()?.has_data) {
+
+          <!-- Depot Blocks -->
+          @if (diffDetails().depot_blocks?.length > 0) {
+          <div class="bg-gray-900/50 rounded border border-gray-800">
+            <button (click)="toggleBlock('depots')"
+              class="w-full flex items-center justify-between p-2 text-[10px] hover:bg-gray-800/50 transition-colors">
+              <span class="text-cyan-400 font-bold">Depots Alterados ({{ diffDetails().depot_blocks.length }})</span>
+              <span class="text-gray-500">{{ isBlockExpanded('depots') ? '−' : '+' }}</span>
+            </button>
+            @if (isBlockExpanded('depots')) {
+            <div class="p-2 pt-0 space-y-1">
+              @for (depot of diffDetails().depot_blocks; track depot.id) {
+              <div class="text-[9px] bg-gray-800/50 p-1.5 rounded">
+                <div class="flex justify-between">
+                  <span class="text-white">{{ depot.name }}</span>
+                  <span class="text-gray-500">{{ depot.platform }}</span>
+                </div>
+                <div class="text-gray-600 font-mono text-[8px] truncate">{{ depot.old_gid?.slice(0,8) }}... → {{
+                  depot.new_gid?.slice(0,8) }}...</div>
+              </div>
+              }
+            </div>
+            }
+          </div>
+          }
+
+          <!-- String Blocks -->
+          @for (block of diffDetails().string_blocks; track block.category) {
+          <div class="bg-gray-900/50 rounded border border-gray-800">
+            <button (click)="toggleBlock(block.category)"
+              class="w-full flex items-center justify-between p-2 text-[10px] hover:bg-gray-800/50 transition-colors">
+              <span class="text-yellow-400 font-bold capitalize">{{ block.category }} ({{ block.count }})</span>
+              <span class="text-gray-500">{{ isBlockExpanded(block.category) ? '−' : '+' }}</span>
+            </button>
+            @if (isBlockExpanded(block.category)) {
+            <div class="p-2 pt-0 max-h-32 overflow-y-auto custom-scrollbar">
+              @for (str of block.strings; track str) {
+              <div class="text-[9px] text-gray-300 font-mono py-0.5 border-b border-gray-800/50 last:border-0">{{ str }}
+              </div>
+              }
+            </div>
+            }
+          </div>
+          }
+
+          <!-- Protobufs -->
+          @if (diffDetails().protobuf_list?.length > 0) {
+          <div class="bg-gray-900/50 rounded border border-gray-800">
+            <button (click)="toggleBlock('protobufs')"
+              class="w-full flex items-center justify-between p-2 text-[10px] hover:bg-gray-800/50 transition-colors">
+              <span class="text-purple-400 font-bold">Protobufs ({{ diffDetails().protobuf_list.length }})</span>
+              <span class="text-gray-500">{{ isBlockExpanded('protobufs') ? '−' : '+' }}</span>
+            </button>
+            @if (isBlockExpanded('protobufs')) {
+            <div class="p-2 pt-0 max-h-32 overflow-y-auto custom-scrollbar">
+              @for (proto of diffDetails().protobuf_list; track proto) {
+              <div class="text-[9px] text-gray-300 font-mono py-0.5 border-b border-gray-800/50 last:border-0">{{ proto
+                }}</div>
+              }
+            </div>
+            }
+          </div>
+          }
+
+          } @else {
+          <div class="text-center text-gray-500 text-[10px] py-2">Sem detalhes disponíveis</div>
+          }
+        </div>
+        }
       </div>
       } @else {
       <div class="text-gray-500 text-center py-2 text-[10px] bg-gray-900/30 rounded">

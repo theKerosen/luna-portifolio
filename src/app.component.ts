@@ -176,6 +176,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   steamLoading = signal(false);
   steamError = signal<string | null>(null);
   serverStatus = signal<any>(null);
+  diffDetails = signal<any>(null);
+  diffDetailsLoading = signal(false);
+  showDiffDetails = signal(false);
+  expandedBlocks = signal<Set<string>>(new Set());
 
   private htopInterval?: any;
 
@@ -293,6 +297,45 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       .replace(/\s+/g, ' ')
       .trim()
       .slice(0, 150);
+  }
+
+  async fetchDiffDetails(): Promise<void> {
+    if (this.diffDetails()) return;
+
+    this.diffDetailsLoading.set(true);
+    try {
+      const res = await fetch('https://api.ladyluh.dev/steam/diff/details');
+      if (res.ok) {
+        const data = await res.json();
+        this.diffDetails.set(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch diff details:', err);
+    } finally {
+      this.diffDetailsLoading.set(false);
+    }
+  }
+
+  async toggleDiffDetails(): Promise<void> {
+    if (!this.showDiffDetails()) {
+      await this.fetchDiffDetails();
+    }
+    this.showDiffDetails.set(!this.showDiffDetails());
+  }
+
+  toggleBlock(category: string): void {
+    const current = this.expandedBlocks();
+    const newSet = new Set(current);
+    if (newSet.has(category)) {
+      newSet.delete(category);
+    } else {
+      newSet.add(category);
+    }
+    this.expandedBlocks.set(newSet);
+  }
+
+  isBlockExpanded(category: string): boolean {
+    return this.expandedBlocks().has(category);
   }
 
   ngAfterViewInit(): void { this.initWebGL(); }
