@@ -239,6 +239,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       const statusData = await statusRes.json();
       this.steamData.set(statusData);
 
+      if (statusData.has_update) {
+        this.fetchDiffDetails();
+      }
+
       if (newsRes.ok) {
         const newsData = await newsRes.json();
         this.steamNews.set(newsData.news || []);
@@ -300,7 +304,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async fetchDiffDetails(): Promise<void> {
-    if (this.diffDetails()) return;
+    if (this.diffDetails() || this.diffDetailsLoading()) return;
 
     this.diffDetailsLoading.set(true);
     try {
