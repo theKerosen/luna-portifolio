@@ -338,6 +338,24 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.expandedBlocks().has(category);
   }
 
+  // Pagination for heavy string lists
+  stringLimits = signal<{ [key: string]: number }>({});
+  readonly INITIAL_LIMIT = 50;
+  readonly LOAD_MORE_STEP = 200;
+
+  getStringLimit(category: string): number {
+    return this.stringLimits()[category] || this.INITIAL_LIMIT;
+  }
+
+  showMoreStrings(event: MouseEvent, category: string): void {
+    event.stopPropagation();
+    const current = this.getStringLimit(category);
+    this.stringLimits.update(limits => ({
+      ...limits,
+      [category]: current + this.LOAD_MORE_STEP
+    }));
+  }
+
   ngAfterViewInit(): void { this.initWebGL(); }
   ngOnDestroy(): void {
     if (this.intervalId) clearInterval(this.intervalId);

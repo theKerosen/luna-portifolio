@@ -578,10 +578,18 @@
               <span class="text-gray-500">{{ isBlockExpanded(block.category) ? '−' : '+' }}</span>
             </button>
             @if (isBlockExpanded(block.category)) {
-            <div class="p-2 pt-0 max-h-32 overflow-y-auto custom-scrollbar">
-              @for (str of block.strings; track str) {
-              <div class="text-[9px] text-gray-300 font-mono py-0.5 border-b border-gray-800/50 last:border-0">{{ str }}
+            <div class="p-2 pt-0 max-h-60 overflow-y-auto custom-scrollbar">
+              @for (str of block.strings.slice(0, getStringLimit(block.category)); track str) {
+              <div
+                class="text-[9px] text-gray-300 font-mono py-0.5 border-b border-gray-800/50 last:border-0 break-all hover:bg-white/5 transition-colors">
+                {{ str }}
               </div>
+              }
+              @if (block.strings.length > getStringLimit(block.category)) {
+              <button (click)="showMoreStrings($event, block.category)"
+                class="w-full text-center text-[9px] text-pink-400 hover:text-white bg-pink-500/10 hover:bg-pink-500/20 py-1.5 mt-1 rounded transition-colors font-bold uppercase tracking-wider">
+                Carregar mais {{ block.strings.length - getStringLimit(block.category) }}...
+              </button>
               }
             </div>
             }
