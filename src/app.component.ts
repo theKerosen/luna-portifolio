@@ -219,13 +219,28 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updateTime();
     this.intervalId = setInterval(() => this.updateTime(), 1000);
     this.htopInterval = setInterval(() => this.updateHtopValues(), 800);
+
+    // Restore state from local storage (Stale-While-Revalidate)
+    const savedStatus = this.loadState<any>('steamData');
+    if (savedStatus) this.steamData.set(savedStatus);
+
+    const savedNews = this.loadState<any[]>('steamNews');
+    if (savedNews) this.steamNews.set(savedNews);
+
+    const savedServers = this.loadState<any>('serverStatus');
+    if (savedServers) this.serverStatus.set(savedServers);
+
+    const savedDiff = this.loadState<any>('diffDetails');
+    if (savedDiff) this.diffDetails.set(savedDiff);
+
     this.fetchSteamData();
     setInterval(() => this.fetchSteamData(), 30000);
   }
 
   async fetchSteamData(): Promise<void> {
     try {
-      this.steamLoading.set(true);
+      // Only show loading if we don't have data
+      if (!this.steamData()) this.steamLoading.set(true);
       this.steamError.set(null);
 
       const [statusRes, newsRes, serversRes] = await Promise.all([
@@ -238,6 +253,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const statusData = await statusRes.json();
       this.steamData.set(statusData);
+      this.saveState('steamData', statusData);
 
       if (statusData.has_update) {
         this.fetchDiffDetails();
@@ -245,22 +261,29 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if (newsRes.ok) {
         const newsData = await newsRes.json();
-        this.steamNews.set(newsData.news || []);
+        const news = newsData.news || [];
+        this.steamNews.set(news);
+        this.saveState('steamNews', news);
       }
 
       if (serversRes.ok) {
         const serversData = await serversRes.json();
         this.serverStatus.set(serversData);
+        this.saveState('serverStatus', serversData);
       } else {
-        this.serverStatus.set({
+        const fallback = {
           steam: statusData.player_count > 0 ? 'online' : 'unknown',
           cs2: statusData.player_count > 0 ? 'online' : 'unknown',
           matchmaking: statusData.player_count > 100000 ? 'normal' : 'low'
-        });
+        };
+        this.serverStatus.set(fallback);
+        this.saveState('serverStatus', fallback);
       }
     } catch (err: any) {
       this.steamError.set(err.message || 'Falha ao conectar');
-      this.serverStatus.set({ steam: 'unknown', cs2: 'unknown', matchmaking: 'unknown' });
+      if (!this.serverStatus()) {
+        this.serverStatus.set({ steam: 'unknown', cs2: 'unknown', matchmaking: 'unknown' });
+      }
     } finally {
       this.steamLoading.set(false);
     }
@@ -304,14 +327,18 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async fetchDiffDetails(): Promise<void> {
-    if (this.diffDetails() || this.diffDetailsLoading()) return;
+    // If we are already loading, skip
+    if (this.diffDetailsLoading()) return;
 
-    this.diffDetailsLoading.set(true);
+    // Only show loading if we don't have data
+    if (!this.diffDetails()) this.diffDetailsLoading.set(true);
+
     try {
       const res = await fetch('https://api.ladyluh.dev/steam/diff/details');
       if (res.ok) {
         const data = await res.json();
         this.diffDetails.set(data);
+        this.saveState('diffDetails', data);
       }
     } catch (err) {
       console.error('Failed to fetch diff details:', err);
@@ -360,6 +387,24 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       ...limits,
       [category]: current + this.LOAD_MORE_STEP
     }));
+  }
+
+  private saveState<T>(key: string, data: T): void {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+      console.warn('Failed to save state to localStorage:', e);
+    }
+  }
+
+  private loadState<T>(key: string): T | null {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : null;
+    } catch (e) {
+      console.warn('Failed to load state from localStorage:', e);
+      return null;
+    }
   }
 
   ngAfterViewInit(): void { this.initWebGL(); }
