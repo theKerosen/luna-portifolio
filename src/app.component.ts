@@ -317,10 +317,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async toggleDiffDetails(): Promise<void> {
-    if (!this.showDiffDetails()) {
+    const isShowing = this.showDiffDetails();
+    this.showDiffDetails.set(!isShowing);
+
+    if (!isShowing && !this.diffDetails()) {
       await this.fetchDiffDetails();
     }
-    this.showDiffDetails.set(!this.showDiffDetails());
   }
 
   toggleBlock(category: string): void {
