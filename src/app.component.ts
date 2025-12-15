@@ -85,6 +85,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private clock = new THREE.Clock();
 
   mousePosition = signal({ x: 0, y: 0 });
+  isMobile = signal(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
 
   cmatrixCanvas = viewChild<NgElementRef<HTMLCanvasElement>>('cmatrixCanvas');
   cmatrixIntervalId = signal<any>(null);
@@ -654,6 +655,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onResize(): void {
+    if (typeof window !== 'undefined') {
+      this.isMobile.set(window.innerWidth < 768);
+    }
     if (!this.camera || !this.renderer) return;
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();

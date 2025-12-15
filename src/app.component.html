@@ -1,5 +1,5 @@
 <div
-  class="text-gray-300 leading-relaxed selection:bg-pink-400/20 font-sans antialiased overflow-hidden h-screen w-screen bg-black">
+  class="text-gray-300 leading-relaxed selection:bg-pink-400/20 font-sans antialiased overflow-hidden h-[100dvh] w-full bg-black">
 
   <div class="h-full flex flex-col relative z-10">
     <!-- Top Bar -->
@@ -18,7 +18,7 @@
           @for (id of ['about', 'projects', 'fetch', 'skills', 'contact', 'snake', 'htop', 'cmatrix', 'steam']; track
           id) {
           <button (click)="toggleWindow(id)"
-            class="group relative px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-mono rounded-sm transition-all duration-200 flex-shrink-0"
+            class="group relative px-3 py-1.5 md:px-3 md:py-1 text-[10px] md:text-xs font-mono rounded-sm transition-all duration-200 flex-shrink-0"
             [class.text-pink-400]="windows()[id].isOpen" [class.bg-pink-500/10]="windows()[id].isOpen"
             [class.text-gray-500]="!windows()[id].isOpen" [class.hover:text-gray-300]="!windows()[id].isOpen">
             {{ id }}
@@ -45,9 +45,9 @@
     <main class="relative flex-grow w-full h-full mt-10 md:mt-12 overflow-auto p-2">
       @if (openWindows().length > 0) {
       <div class="w-full min-h-full md:h-full grid gap-2"
-        [class]="openWindows().length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-' + gridCols()"
-        [style.grid-template-columns]="'repeat(' + gridCols() + ', 1fr)'"
-        [style.grid-template-rows]="'repeat(' + gridRows() + ', 1fr)'">
+        [class]="isMobile() ? 'grid-cols-1 auto-rows-min' : (openWindows().length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-' + gridCols())"
+        [style.grid-template-columns]="isMobile() ? '1fr' : 'repeat(' + gridCols() + ', 1fr)'"
+        [style.grid-template-rows]="isMobile() ? 'none' : 'repeat(' + gridRows() + ', 1fr)'">
         @for (window of openWindows(); track window.id; let idx = $index) {
         <div class="min-h-0 min-w-0" [style.grid-column]="getGridColumn(idx)">
           <ng-container [ngTemplateOutlet]="windowTile"
