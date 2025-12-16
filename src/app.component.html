@@ -460,15 +460,20 @@
       <!-- Server Status -->
       @if (serverStatus()) {
       <div class="grid grid-cols-3 gap-2 text-[10px]">
+        <!-- Row 1 -->
         <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
           <div class="text-gray-500 mb-1">Steam</div>
           <div class="flex items-center justify-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().steam === 'online'"
-              [class.bg-yellow-500]="serverStatus().steam === 'checking'"
+              [class.bg-yellow-500]="serverStatus().steam === 'unstable' || serverStatus().steam === 'checking'"
+              [class.bg-red-500]="serverStatus().steam === 'offline'"
               [class.bg-gray-500]="serverStatus().steam === 'unknown'"></span>
             <span [class.text-green-400]="serverStatus().steam === 'online'"
-              [class.text-gray-400]="serverStatus().steam !== 'online'">
-              {{ serverStatus().steam === 'online' ? 'Online' : 'N/A' }}
+              [class.text-yellow-400]="serverStatus().steam === 'unstable'"
+              [class.text-red-400]="serverStatus().steam === 'offline'"
+              [class.text-gray-400]="serverStatus().steam !== 'online' && serverStatus().steam !== 'unstable' && serverStatus().steam !== 'offline'">
+              {{ serverStatus().steam === 'online' ? 'Online' : serverStatus().steam === 'unstable' ? 'Instável' :
+              serverStatus().steam === 'offline' ? 'Offline' : 'N/A' }}
             </span>
           </div>
         </div>
@@ -476,11 +481,13 @@
           <div class="text-gray-500 mb-1">CS2</div>
           <div class="flex items-center justify-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().cs2 === 'online'"
-              [class.bg-yellow-500]="serverStatus().cs2 === 'checking'"
+              [class.bg-yellow-500]="serverStatus().cs2 === 'unstable' || serverStatus().cs2 === 'checking'"
+              [class.bg-red-500]="serverStatus().cs2 === 'offline'"
               [class.bg-gray-500]="serverStatus().cs2 === 'unknown'"></span>
             <span [class.text-green-400]="serverStatus().cs2 === 'online'"
-              [class.text-gray-400]="serverStatus().cs2 !== 'online'">
-              {{ serverStatus().cs2 === 'online' ? 'Online' : 'N/A' }}
+              [class.text-yellow-400]="serverStatus().cs2 === 'unstable'"
+              [class.text-gray-400]="serverStatus().cs2 !== 'online' && serverStatus().cs2 !== 'unstable'">
+              {{ serverStatus().cs2 === 'online' ? 'Online' : serverStatus().cs2 === 'unstable' ? 'Instável' : 'N/A' }}
             </span>
           </div>
         </div>
@@ -488,13 +495,57 @@
           <div class="text-gray-500 mb-1">MM</div>
           <div class="flex items-center justify-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().matchmaking === 'normal'"
-              [class.bg-yellow-500]="serverStatus().matchmaking === 'low'"
+              [class.bg-yellow-500]="serverStatus().matchmaking === 'low' || serverStatus().matchmaking === 'delayed'"
               [class.bg-gray-500]="serverStatus().matchmaking === 'unknown'"></span>
             <span [class.text-green-400]="serverStatus().matchmaking === 'normal'"
-              [class.text-yellow-400]="serverStatus().matchmaking === 'low'"
+              [class.text-yellow-400]="serverStatus().matchmaking === 'low' || serverStatus().matchmaking === 'delayed'"
               [class.text-gray-400]="serverStatus().matchmaking === 'unknown'">
-              {{ serverStatus().matchmaking === 'normal' ? 'Normal' : serverStatus().matchmaking === 'low' ? 'Baixo' :
-              'N/A' }}
+              {{ serverStatus().matchmaking === 'normal' ? 'Normal' : 'Lento' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
+          <div class="text-gray-500 mb-1">Loja Steam</div>
+          <div class="flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().steam_store === 'online'"
+              [class.bg-yellow-500]="serverStatus().steam_store === 'slow' || serverStatus().steam_store === 'maintenance'"
+              [class.bg-red-500]="serverStatus().steam_store === 'offline'"
+              [class.bg-gray-500]="!serverStatus().steam_store || serverStatus().steam_store === 'unknown'"></span>
+            <span [class.text-green-400]="serverStatus().steam_store === 'online'"
+              [class.text-yellow-400]="serverStatus().steam_store === 'slow' || serverStatus().steam_store === 'maintenance'"
+              [class.text-red-400]="serverStatus().steam_store === 'offline'"
+              [class.text-gray-400]="!serverStatus().steam_store">
+              {{ serverStatus().steam_store === 'online' ? 'Online' : serverStatus().steam_store === 'slow' ? 'Lento' :
+              serverStatus().steam_store === 'maintenance' ? 'Manut.' : 'Offline' }}
+            </span>
+          </div>
+        </div>
+        <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
+          <div class="text-gray-500 mb-1">Comunidade</div>
+          <div class="flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full"
+              [class.bg-green-500]="serverStatus().steam_community !== 'unstable' && serverStatus().steam_community !== 'delayed'"
+              [class.bg-yellow-500]="serverStatus().steam_community === 'unstable' || serverStatus().steam_community === 'delayed' || serverStatus().steam_community === 'slow'"
+              [class.bg-gray-500]="!serverStatus().steam_community"></span>
+            <span
+              [class.text-green-400]="serverStatus().steam_community !== 'unstable' && serverStatus().steam_community !== 'delayed'"
+              [class.text-yellow-400]="serverStatus().steam_community === 'unstable' || serverStatus().steam_community === 'delayed'">
+              {{ (serverStatus().steam_community === 'unstable' || serverStatus().steam_community === 'delayed') ?
+              'Lento' : 'Online' }}
+            </span>
+          </div>
+        </div>
+        <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
+          <div class="text-gray-500 mb-1">Inventário</div>
+          <div class="flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().inventory === 'normal'"
+              [class.bg-yellow-500]="serverStatus().inventory === 'delayed' || serverStatus().inventory === 'surge'"
+              [class.bg-gray-500]="!serverStatus().inventory"></span>
+            <span [class.text-green-400]="serverStatus().inventory === 'normal'"
+              [class.text-yellow-400]="serverStatus().inventory !== 'normal'">
+              {{ serverStatus().inventory === 'normal' ? 'Normal' : 'Lento' }}
             </span>
           </div>
         </div>
@@ -543,6 +594,18 @@
           @if (diffDetailsLoading()) {
           <div class="text-center text-gray-400 text-[10px] py-2">Carregando detalhes...</div>
           } @else if (diffDetails()?.has_data) {
+
+          <!-- Metadata Analysis -->
+          @if (diffDetails().analysis) {
+          <div class="bg-gray-900/50 rounded border border-gray-800 mb-2">
+            <div class="w-full p-2 text-[10px] bg-pink-900/20 border-b border-pink-500/20">
+              <span class="text-pink-400 font-bold">Análise Técnica (Metadata)</span>
+            </div>
+            <div class="p-2 text-[9px] text-gray-300 font-mono whitespace-pre-wrap leading-relaxed">
+              {{ diffDetails().analysis }}
+            </div>
+          </div>
+          }
 
           <!-- Depot Blocks -->
           @if (diffDetails().depot_blocks?.length > 0) {
