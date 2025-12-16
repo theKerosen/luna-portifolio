@@ -457,6 +457,73 @@
         </div>
       </div>
 
+      <!-- ORACLE HYPE SCANNER -->
+      @if (hypeData()) {
+      <div
+        class="relative overflow-hidden rounded border p-3 border-gray-800 bg-gray-900/40 transition-all duration-500"
+        [class.border-pink-500]="hypeData().score >= 80" [class.bg-pink-900/20]="hypeData().score >= 80"
+        [class.border-purple-500]="hypeData().score >= 50 && hypeData().score < 80"
+        [class.bg-purple-900/20]="hypeData().score >= 50 && hypeData().score < 80">
+
+        <!-- Background Effects for High Hype -->
+        @if(hypeData().score >= 80) {
+        <div class="absolute inset-0 bg-pink-500/10 animate-pulse"></div>
+        }
+
+        <div class="relative z-10 flex items-center justify-between">
+          <div>
+            <div class="text-[10px] font-bold tracking-widest uppercase mb-1"
+              [class.text-gray-500]="hypeData().score < 20"
+              [class.text-blue-400]="hypeData().score >= 20 && hypeData().score < 50"
+              [class.text-purple-400]="hypeData().score >= 50 && hypeData().score < 80"
+              [class.text-pink-400]="hypeData().score >= 80">
+              The Oracle // Hype Scanner
+            </div>
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-black font-mono leading-none" [class.text-white]="hypeData().score < 80"
+                [class.text-transparent]="hypeData().score >= 80" [class.bg-clip-text]="hypeData().score >= 80"
+                [class.bg-gradient-to-r]="hypeData().score >= 80" [class.from-pink-500]="hypeData().score >= 80"
+                [class.via-purple-500]="hypeData().score >= 80" [class.to-white]="hypeData().score >= 80">
+                {{ hypeData().score | number:'1.0-0' }}
+              </span>
+              <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded"
+                [class.bg-gray-800]="hypeData().score < 20" [class.text-gray-400]="hypeData().score < 20"
+                [class.bg-blue-900/30]="hypeData().score >= 20" [class.text-blue-400]="hypeData().score >= 20"
+                [class.bg-purple-900/30]="hypeData().score >= 50" [class.text-purple-400]="hypeData().score >= 50"
+                [class.bg-pink-900/30]="hypeData().score >= 80" [class.text-pink-400]="hypeData().score >= 80"
+                [class.animate-pulse]="hypeData().score >= 80">
+                {{ hypeData().severity }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Mini Gauge / Visual -->
+          <div class="w-12 h-12 relative flex items-center justify-center">
+            <svg class="w-full h-full transform -rotate-90">
+              <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent"
+                class="text-gray-800" />
+              <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent"
+                [attr.stroke-dasharray]="126" [attr.stroke-dashoffset]="126 - (126 * hypeData().score / 100)"
+                class="transition-all duration-1000 ease-out" [class.text-blue-500]="hypeData().score < 50"
+                [class.text-purple-500]="hypeData().score >= 50 && hypeData().score < 80"
+                [class.text-pink-500]="hypeData().score >= 80" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Contributors List -->
+        @if(hypeData().contributors?.length > 0) {
+        <div class="mt-3 flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
+          @for(tag of hypeData().contributors; track tag) {
+          <span class="text-[9px] px-1.5 py-0.5 rounded border border-white/5 bg-black/30 text-gray-400">
+            {{ tag }}
+          </span>
+          }
+        </div>
+        }
+      </div>
+      }
+
       <!-- Server Status -->
       @if (serverStatus()) {
       <div class="grid grid-cols-3 gap-2 text-[10px]">

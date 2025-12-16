@@ -177,6 +177,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   steamLoading = signal(false);
   steamError = signal<string | null>(null);
   serverStatus = signal<any>(null);
+  hypeData = signal<any>(null);
   diffDetails = signal<any>(null);
   diffDetailsLoading = signal(false);
   showDiffDetails = signal(false);
@@ -244,10 +245,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!this.steamData()) this.steamLoading.set(true);
       this.steamError.set(null);
 
-      const [statusRes, newsRes, serversRes] = await Promise.all([
+      const [statusRes, newsRes, serversRes, hypeRes] = await Promise.all([
         fetch('https://api.ladyluh.dev/steam/status'),
         fetch('https://api.ladyluh.dev/steam/news'),
-        fetch('https://api.ladyluh.dev/steam/servers')
+        fetch('https://api.ladyluh.dev/steam/servers'),
+        fetch('https://api.ladyluh.dev/steam/hype')
       ]);
 
       if (!statusRes.ok) throw new Error('API offline');
@@ -279,6 +281,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         };
         this.serverStatus.set(fallback);
         this.saveState('serverStatus', fallback);
+      }
+
+      if (hypeRes.ok) {
+        const hype = await hypeRes.json();
+        this.hypeData.set(hype);
+        // this.saveState('hypeData', hype); // Optional persistence
       }
     } catch (err: any) {
       this.steamError.set(err.message || 'Falha ao conectar');
