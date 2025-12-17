@@ -271,8 +271,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if (serversRes.ok) {
         const serversData = await serversRes.json();
-        this.serverStatus.set(serversData);
-        this.saveState('serverStatus', serversData);
+
+        // Map new API schema to template schema
+        const mappedData = {
+          ...serversData,
+          cs2_sessions: serversData.sessions,
+          matchmaking_scheduler: serversData.scheduler,
+          steam_web_api: serversData.steam_web_api ?? 'unknown'
+        };
+
+        this.serverStatus.set(mappedData);
+        this.saveState('serverStatus', mappedData);
       } else {
         const fallback = {
           steam: statusData.player_count > 0 ? 'online' : 'unknown',
