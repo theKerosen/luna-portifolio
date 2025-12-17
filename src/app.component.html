@@ -616,6 +616,51 @@
             </span>
           </div>
         </div>
+
+        <!-- Row 3 -->
+        <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
+          <div class="text-gray-500 mb-1">Sessions (Logon)</div>
+          <div class="flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().cs2_sessions === 'normal'"
+              [class.bg-yellow-500]="serverStatus().cs2_sessions === 'surge' || serverStatus().cs2_sessions === 'delayed'"
+              [class.bg-red-500]="serverStatus().cs2_sessions === 'offline'"
+              [class.bg-gray-500]="!serverStatus().cs2_sessions"></span>
+            <span [class.text-green-400]="serverStatus().cs2_sessions === 'normal'"
+              [class.text-yellow-400]="serverStatus().cs2_sessions === 'surge' || serverStatus().cs2_sessions === 'delayed'"
+              [class.text-red-400]="serverStatus().cs2_sessions === 'offline'"
+              [class.text-gray-400]="!serverStatus().cs2_sessions">
+              {{ serverStatus().cs2_sessions === 'normal' ? 'Normal' : serverStatus().cs2_sessions === 'surge' ? 'Alto
+              Tráfego' : 'N/A' }}
+            </span>
+          </div>
+        </div>
+        <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
+          <div class="text-gray-500 mb-1">MM Scheduler</div>
+          <div class="flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full"
+              [class.bg-green-500]="serverStatus().matchmaking_scheduler === 'normal'"
+              [class.bg-yellow-500]="serverStatus().matchmaking_scheduler === 'maintenance'"
+              [class.bg-gray-500]="!serverStatus().matchmaking_scheduler"></span>
+            <span [class.text-green-400]="serverStatus().matchmaking_scheduler === 'normal'"
+              [class.text-yellow-400]="serverStatus().matchmaking_scheduler === 'maintenance'"
+              [class.text-gray-400]="!serverStatus().matchmaking_scheduler">
+              {{ serverStatus().matchmaking_scheduler === 'normal' ? 'Normal' : 'Manut.' }}
+            </span>
+          </div>
+        </div>
+        <div class="bg-gray-900/60 p-2 rounded border border-gray-800 text-center">
+          <div class="text-gray-500 mb-1">Web API</div>
+          <div class="flex items-center justify-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-500]="serverStatus().steam_web_api === 'online'"
+              [class.bg-yellow-500]="serverStatus().steam_web_api === 'slow'"
+              [class.bg-gray-500]="!serverStatus().steam_web_api"></span>
+            <span [class.text-green-400]="serverStatus().steam_web_api === 'online'"
+              [class.text-yellow-400]="serverStatus().steam_web_api === 'slow'"
+              [class.text-gray-400]="!serverStatus().steam_web_api">
+              {{ serverStatus().steam_web_api === 'online' ? 'Online' : 'Lento' }}
+            </span>
+          </div>
+        </div>
       </div>
       }
 
