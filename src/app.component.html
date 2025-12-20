@@ -7,27 +7,74 @@
       class="fixed top-0 left-0 right-0 z-[10000] bg-black/80 backdrop-blur-md border-b border-pink-500/20 flex-shrink-0 h-10 md:h-12 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
       <div class="w-full h-full px-4 flex items-center justify-between">
         <!-- Active Window Title -->
-        <div class="font-mono text-xs md:text-sm text-pink-400/90 flex items-center gap-2">
-          <span class="text-purple-500">➜</span>
-          <span>{{ windows()[activeWindowId()]?.title ?? 'Desktop' }}</span>
+        <div class="font-mono text-xs md:text-sm text-pink-400/90 flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <span class="text-purple-500">➜</span>
+            <span>{{ windows()[activeWindowId() ?? '']?.title ?? 'Desktop' }}</span>
+          </div>
+
+          <!-- Workspace Switcher -->
+          <div class="hidden md:flex items-center bg-gray-900/80 rounded border border-gray-800 p-0.5 ml-4">
+            <button (click)="setWorkspace('dev')" class="px-2 py-0.5 text-[10px] font-bold transition-all rounded"
+              [class.bg-pink-500]="currentWorkspace() === 'dev'" [class.text-black]="currentWorkspace() === 'dev'"
+              [class.text-gray-500]="currentWorkspace() !== 'dev'">DEV</button>
+            <button (click)="setWorkspace('poetry')" class="px-2 py-0.5 text-[10px] font-bold transition-all rounded"
+              [class.bg-purple-500]="currentWorkspace() === 'poetry'"
+              [class.text-black]="currentWorkspace() === 'poetry'"
+              [class.text-gray-500]="currentWorkspace() !== 'poetry'">POEMAS</button>
+          </div>
         </div>
 
         <!-- Applets / Taskbar -->
         <div
           class="flex items-center space-x-1 bg-gray-900/50 p-1 rounded border border-gray-800 overflow-x-auto max-w-[70vw] md:max-w-none scrollbar-hide">
-          @for (id of ['about', 'projects', 'fetch', 'skills', 'contact', 'snake', 'htop', 'cmatrix', 'steam']; track
-          id) {
-          <button (click)="toggleWindow(id)"
-            class="group relative px-3 py-1.5 md:px-3 md:py-1 text-[10px] md:text-xs font-mono rounded-sm transition-all duration-200 flex-shrink-0"
-            [class.text-pink-400]="windows()[id].isOpen" [class.bg-pink-500/10]="windows()[id].isOpen"
-            [class.text-gray-500]="!windows()[id].isOpen" [class.hover:text-gray-300]="!windows()[id].isOpen">
-            {{ id }}
-            @if(windows()[id].isOpen) {
-            <span
-              class="absolute -bottom-[6px] left-1/2 -translate-x-1/2 w-1 h-1 bg-pink-500 rounded-full shadow-[0_0_5px_#ec4899]"></span>
+
+          <ng-container *ngIf="currentWorkspace() === 'dev'">
+            @for (id of ['about', 'projects', 'fetch', 'skills', 'contact', 'snake', 'htop', 'cmatrix', 'steam']; track
+            id) {
+            <button (click)="toggleWindow(id)"
+              class="group relative px-3 py-1.5 md:px-3 md:py-1 text-[10px] md:text-xs font-mono rounded-sm transition-all duration-200 flex-shrink-0"
+              [class.text-pink-400]="windows()[id].isOpen" [class.bg-pink-500/10]="windows()[id].isOpen"
+              [class.text-gray-500]="!windows()[id].isOpen" [class.hover:text-gray-300]="!windows()[id].isOpen">
+              {{ id }}
+              @if(windows()[id].isOpen) {
+              <span
+                class="absolute -bottom-[6px] left-1/2 -translate-x-1/2 w-1 h-1 bg-pink-500 rounded-full shadow-[0_0_5px_#ec4899]"></span>
+              }
+            </button>
             }
-          </button>
-          }
+          </ng-container>
+
+          <ng-container *ngIf="currentWorkspace() === 'poetry'">
+            <button (click)="toggleWindow('explorer')"
+              class="group relative px-3 py-1.5 md:px-3 md:py-1 text-[10px] md:text-xs font-mono rounded-sm transition-all duration-200 flex-shrink-0"
+              [class.text-purple-400]="windows()['explorer'].isOpen"
+              [class.bg-purple-500/10]="windows()['explorer'].isOpen"
+              [class.text-gray-500]="!windows()['explorer'].isOpen"
+              [class.hover:text-gray-300]="!windows()['explorer'].isOpen">
+              explorer
+              @if(windows()['explorer'].isOpen) {
+              <span
+                class="absolute -bottom-[6px] left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-500 rounded-full shadow-[0_0_5px_#a855f7]"></span>
+              }
+            </button>
+
+            @for (item of Object.entries(windows()); track item[0]) {
+            @if (item[0].startsWith('poem-') && item[1].isOpen) {
+            <button (click)="focusWindow(item[0])"
+              class="group relative px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-mono rounded-sm transition-all duration-200 flex-shrink-0"
+              [class.text-purple-400]="activeWindowId() === item[0]"
+              [class.bg-purple-500/10]="activeWindowId() === item[0]"
+              [class.text-gray-500]="activeWindowId() !== item[0]">
+              {{ item[1].title.replace('.txt', '') }}
+              @if(activeWindowId() === item[0]) {
+              <span
+                class="absolute -bottom-[6px] left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-500 rounded-full shadow-[0_0_5px_#a855f7]"></span>
+              }
+            </button>
+            }
+            }
+          </ng-container>
           <div class="w-[1px] h-4 bg-gray-800 mx-2 flex-shrink-0"></div>
           <button (click)="toggleLang()"
             class="px-2 py-0.5 text-[10px] md:text-xs font-mono text-purple-400 hover:text-pink-400 transition-colors bg-purple-500/10 rounded border border-purple-500/20 hover:border-pink-500/30 flex-shrink-0">
@@ -158,14 +205,25 @@
       <ng-container [ngTemplateOutlet]="steamContent"></ng-container>
     </div>
     }
+    @case ('explorer') {
+    <div class="flex-grow bg-[#050508] relative overflow-y-auto">
+      <ng-container [ngTemplateOutlet]="explorerContent"></ng-container>
+    </div>
+    }
     @default {
-    <div class="flex-grow overflow-y-auto overflow-x-hidden p-4 md:p-6 custom-scrollbar">
+    <div class="flex-grow overflow-y-auto overflow-x-hidden p-4 md:p-6 custom-scrollbar"
+      [class.bg-white]="window.id.startsWith('poem-')" [class.pt-10]="window.id.startsWith('poem-')">
+      @if (window.id.startsWith('poem-')) {
+      <ng-container [ngTemplateOutlet]="notepadContent"
+        [ngTemplateOutletContext]="{ poem: getPoemById(window.poemId) }"></ng-container>
+      } @else {
       @switch (window.id) {
       @case('fetch') { <ng-container [ngTemplateOutlet]="fetchContent"></ng-container> }
       @case('projects') { <ng-container [ngTemplateOutlet]="projectsContent"></ng-container> }
       @case('about') { <ng-container [ngTemplateOutlet]="aboutContent"></ng-container> }
       @case('skills') { <ng-container [ngTemplateOutlet]="skillsContent"></ng-container> }
       @case('contact') { <ng-container [ngTemplateOutlet]="contactContent"></ng-container> }
+      }
       }
     </div>
     }
@@ -830,4 +888,58 @@
     </div>
     }
   </div>
+</ng-template>
+
+<!-- POETRY TEMPLATES -->
+
+<ng-template #explorerContent>
+  <div class="p-4 md:p-8">
+    <div class="flex items-center gap-3 mb-8 border-b border-gray-800 pb-4">
+      <div class="p-2 transition-all hover:scale-110 bg-purple-500/10 rounded border border-purple-500/30">
+        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-white font-bold tracking-tight">poemas da Luna</h3>
+        <p class="text-[10px] text-gray-500 font-mono uppercase tracking-widest">{{ poems().length }} itens •
+          archive_v2.lfs</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      @for (poem of poems(); track poem.id) {
+      <div (click)="openPoem(poem.id)"
+        class="group flex flex-col items-center p-4 rounded-lg border border-transparent hover:border-purple-500/30 hover:bg-purple-500/5 transition-all cursor-pointer">
+        <div class="relative mb-3">
+          <svg class="w-12 h-12 text-gray-700 group-hover:text-purple-400 transition-colors" fill="currentColor"
+            viewBox="0 0 24 24">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M13,9V3.5L18.5,9H13Z" />
+          </svg>
+        </div>
+        <span class="text-xs text-gray-400 group-hover:text-white font-mono text-center line-clamp-2">{{ poem.title
+          }}.txt</span>
+      </div>
+      }
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #notepadContent let-poem="poem">
+  @if (poem) {
+  <div class="max-w-2xl mx-auto py-8 px-4 font-serif text-black leading-relaxed">
+    <div class="mb-12 border-b border-gray-200 pb-4">
+      <h1 class="text-4xl font-light mb-2">{{ poem.title }}</h1>
+    </div>
+
+    <div class="whitespace-pre-line text-lg md:text-xl text-gray-800">
+      {{ poem.content }}
+    </div>
+
+    <div class="mt-20 flex justify-center text-gray-300">
+      <span class="text-2xl">❧</span>
+    </div>
+  </div>
+  }
 </ng-template>
