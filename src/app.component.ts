@@ -273,7 +273,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.intervalId = setInterval(() => this.updateTime(), 1000);
     this.htopInterval = setInterval(() => this.updateHtopValues(), 800);
 
-    // Restore state from local storage (Stale-While-Revalidate)
     const savedStatus = this.loadState<any>('steamData');
     if (savedStatus) this.steamData.set(savedStatus);
 
@@ -292,15 +291,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async fetchSteamData(): Promise<void> {
     try {
-      // Only show loading if we don't have data
       if (!this.steamData()) this.steamLoading.set(true);
       this.steamError.set(null);
 
       const [statusRes, newsRes, serversRes, hypeRes] = await Promise.all([
-        fetch('https://api.ladyluh.dev/steam/status'),
-        fetch('https://api.ladyluh.dev/steam/news'),
-        fetch('https://api.ladyluh.dev/steam/servers'),
-        fetch('https://api.ladyluh.dev/steam/hype')
+        fetch('https://kerosen-astranet.hf.space/steam/status'),
+        fetch('https://kerosen-astranet.hf.space/steam/news'),
+        fetch('https://kerosen-astranet.hf.space/steam/servers'),
+        fetch('https://kerosen-astranet.hf.space/steam/hype')
       ]);
 
       if (!statusRes.ok) throw new Error('API offline');
@@ -323,7 +321,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       if (serversRes.ok) {
         const serversData = await serversRes.json();
 
-        // Map new API schema to template schema
         const mappedData = {
           ...serversData,
           cs2_sessions: serversData.sessions,
@@ -403,7 +400,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.diffDetails()) this.diffDetailsLoading.set(true);
 
     try {
-      const res = await fetch('https://api.ladyluh.dev/steam/diff/details');
+      const res = await fetch('https://kerosen-astranet.hf.space/steam/diff/details');
       if (res.ok) {
         const data = await res.json();
         this.diffDetails.set(data);
@@ -440,7 +437,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.expandedBlocks().has(category);
   }
 
-  // Pagination for heavy string lists
   stringLimits = signal<{ [key: string]: number }>({});
   readonly INITIAL_LIMIT = 50;
   readonly LOAD_MORE_STEP = 200;
